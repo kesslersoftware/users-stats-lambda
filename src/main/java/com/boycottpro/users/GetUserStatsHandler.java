@@ -36,8 +36,9 @@ public class GetUserStatsHandler implements RequestHandler<APIGatewayProxyReques
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
+        String sub = null;
         try {
-            String sub = JwtUtility.getSubFromRestEvent(event);
+            sub = JwtUtility.getSubFromRestEvent(event);
             if (sub == null) return response(401, "Unauthorized");
             int totalBoycotts = getNumCompaniesBoycotted(sub);
             int numCausesFollowed = getNumCausesFollowed(sub);
@@ -53,19 +54,24 @@ public class GetUserStatsHandler implements RequestHandler<APIGatewayProxyReques
             }
             ResponsePojo stats = new ResponsePojo(totalBoycotts,numCausesFollowed,worstCompanyName,
                     worstCount,topReason,causeName,followerCount);
-            String responseBody = objectMapper.writeValueAsString(stats);
-            return response(200, responseBody);
+            return response(200, stats);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage() + " for user " + sub);
             return response(500,"{\"error\": \"Unexpected server error: " + e.getMessage() + "\"}");
         }
     }
 
-    private APIGatewayProxyResponseEvent response(int status, String body) {
+    private APIGatewayProxyResponseEvent response(int status, Object body) {
+        String responseBody = null;
+        try {
+            responseBody = objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         return new APIGatewayProxyResponseEvent()
                 .withStatusCode(status)
                 .withHeaders(Map.of("Content-Type", "application/json"))
-                .withBody(body);
+                .withBody(responseBody);
     }
 
     private int getNumCompaniesBoycotted(String userId) {
