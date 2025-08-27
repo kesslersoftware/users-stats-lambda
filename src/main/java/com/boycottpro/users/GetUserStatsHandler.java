@@ -39,7 +39,7 @@ public class GetUserStatsHandler implements RequestHandler<APIGatewayProxyReques
         String sub = null;
         try {
             sub = JwtUtility.getSubFromRestEvent(event);
-            if (sub == null) return response(401, "Unauthorized");
+            if (sub == null) return response(401, Map.of("message", "Unauthorized"));
             int totalBoycotts = getNumCompaniesBoycotted(sub);
             int numCausesFollowed = getNumCausesFollowed(sub);
             Companies worstCompany = getCompanyWithMostBoycotts();
