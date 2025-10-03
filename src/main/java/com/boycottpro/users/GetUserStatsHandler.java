@@ -11,6 +11,7 @@ import com.boycottpro.users.model.ResponsePojo;
 import com.boycottpro.utilities.CausesUtility;
 import com.boycottpro.utilities.CompanyUtility;
 import com.boycottpro.utilities.JwtUtility;
+import com.boycottpro.utilities.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -37,16 +38,27 @@ public class GetUserStatsHandler implements RequestHandler<APIGatewayProxyReques
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
         String sub = null;
+        int lineNum = 41;
         try {
             sub = JwtUtility.getSubFromRestEvent(event);
-            if (sub == null) return response(401, Map.of("message", "Unauthorized"));
+            if (sub == null) {
+                Logger.error(45, sub, "user is Unauthorized");
+                return response(401, Map.of("message", "Unauthorized"));
+            }
+            lineNum = 48;
             int totalBoycotts = getNumCompaniesBoycotted(sub);
+            lineNum = 50;
             int numCausesFollowed = getNumCausesFollowed(sub);
+            lineNum = 52;
             Companies worstCompany = getCompanyWithMostBoycotts();
+            lineNum = 54;
             String worstCompanyName = worstCompany.getCompany_name();
+            lineNum = 56;
             int worstCount = worstCompany.getBoycott_count();
             String topReason = reasonPeopleAreBoycottingCompany(worstCompany.getCompany_id());
+            lineNum = 59;
             Causes bestCause = topCauseBeingFollowed();
+            lineNum = 61;
             String causeName = bestCause.getCause_desc();
             int followerCount = bestCause.getFollower_count();
             if(followerCount == 0){
@@ -54,9 +66,10 @@ public class GetUserStatsHandler implements RequestHandler<APIGatewayProxyReques
             }
             ResponsePojo stats = new ResponsePojo(totalBoycotts,numCausesFollowed,worstCompanyName,
                     worstCount,topReason,causeName,followerCount);
+            lineNum = 69;
             return response(200, stats);
         } catch (Exception e) {
-            System.out.println(e.getMessage() + " for user " + sub);
+            Logger.error(lineNum, sub, e.getMessage());
             return response(500,"{\"error\": \"Unexpected server error: " + e.getMessage() + "\"}");
         }
     }
